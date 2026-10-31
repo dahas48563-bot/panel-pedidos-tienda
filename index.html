@@ -8,6 +8,9 @@
         body { font-family: Arial, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
         h1 { text-align: center; color: #2c3e50; }
         .container { max-width: 900px; margin: 0 auto; }
+        .bt-status-bar { text-align: center; margin-bottom: 20px; }
+        .btn-bt { background: #8e44ad; color: white; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        .btn-bt:hover { background: #732d91; }
         .card { background: white; padding: 20px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; border-left: 5px solid #27ae60; }
         .info div { margin-bottom: 6px; }
         .info strong { color: #555; }
@@ -15,36 +18,67 @@
         .btn-print { background: #2980b9; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .btn-print:hover { background: #1f618d; }
         .loading { text-align: center; font-size: 1.2em; color: #7f8c8d; margin-top: 40px; }
-
-        @media print {
-            body * { visibility: hidden; }
-            .ticket-impresion, .ticket-impresion * { visibility: visible; }
-            .ticket-impresion { position: absolute; left: 0; top: 0; width: 58mm; font-family: 'Courier New', monospace; font-size: 11px; padding: 5px; color: #000; }
-        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>📦 Panel de Pedidos en Vivo</h1>
+    <div class="bt-status-bar">
+        <button class="btn-bt" onclick="conectarBluetooth()">🔵 Conectar Impresora Bluetooth</button>
+        <div id="bt-status" style="margin-top: 6px; font-size: 13px; color: #7f8c8d;">Estado: Desconectada</div>
+    </div>
     <div id="pedidos-list" class="loading">Cargando pedidos recientes...</div>
 </div>
 
 <script>
-    // URL correcta de tu Webhook / Apps Script
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyAqwdqfY2q39TVxXBWkyQ_SYLSAS_pnadya1BWoTfCvCxyPVDNEjR-nVNy61IZJym8qg/exec";
+    
+    let bluetoothDevice = null;
+    let bluetoothCharacteristic = null;
+
+    async function conectarBluetooth() {
+        const statusDiv = document.getElementById('bt-status');
+        try {
+            statusDiv.innerText = "Buscando impresora...";
+            bluetoothDevice = await navigator.bluetooth.requestDevice({
+                acceptAllDevices: true,
+                optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb', '49535343-fe7d-41aa-97b2-670f5087412e', 'e7810a71-73ae-499d-8c15-faa9aef0c3f2']
+            });
+
+            const server = await bluetoothDevice.gatt.connect();
+            const services = await server.getPrimaryServices();
+            
+            for (const service of services) {
+                const characteristics = await service.getCharacteristics();
+                for (const char of characteristics) {
+                    if (char.properties.write || char.properties.writeWithoutResponse) {
+                        bluetoothCharacteristic = char;
+                        break;
+                    }
+                }
+                if (bluetoothCharacteristic) break;
+            }
+
+            if (bluetoothCharacteristic) {
+                statusDiv.innerHTML = `<span style="color:green; font-weight:bold;">🟢 Conectado a: ${bluetoothDevice.name || 'Impresora Térmica'}</span>`;
+            } else {
+                statusDiv.innerText = "Dispositivo sin características de escritura.";
+            }
+        } catch (error) {
+            console.error(error);
+            statusDiv.innerText = "Error o conexión cancelada.";
+        }
+    }
 
     function cargarPedidos() {
         const contenedor = document.getElementById('pedidos-list');
 
         fetch(WEB_APP_URL, { redirect: "follow" })
-            .then(response => {
-                if (!response.ok) throw new Error("Error en la respuesta de red");
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
                 if (!Array.isArray(data) || data.length === 0) {
-                    contenedor.innerHTML = "<p style='text-align:center;'>No hay pedidos registrados todavía.</p>";
+                    contenedor.innerHTML = "<p style='text-align:center;'>No hay pedidos registrados.</p>";
                     return;
                 }
 
@@ -79,36 +113,43 @@
                 });
             })
             .catch(error => {
-                console.error("Error al cargar pedidos:", error);
-                contenedor.innerHTML = "<p style='text-align:center; color:red;'>Error al cargar los pedidos desde Google Sheets.</p>";
+                contenedor.innerHTML = "<p style='text-align:center; color:red;'>Error al cargar pedidos.</p>";
             });
     }
 
+    async function enviarTextoImpresora(texto) {
+        if (!bluetoothCharacteristic) {
+            alert("Primero presiona el botón 'Conectar Impresora Bluetooth' arriba.");
+            return;
+        }
+        const encoder = new TextEncoder();
+        const data = encoder.encode(texto + "\n\n\n");
+        await bluetoothCharacteristic.writeValue(data);
+    }
+
     function imprimirTicket(id, fecha, hora, cliente, telefono, pedido, direccion, total, pago) {
-        const ticketDiv = document.createElement('div');
-        ticketDiv.className = 'ticket-impresion';
-        ticketDiv.innerHTML = `
-            <div style="text-align:center; font-weight:bold; font-size:14px;">TIENDITA / RECAUDERÍA</div>
-            <div style="text-align:center;">Ticket de Pedido por Voz</div>
-            <div>--------------------------------</div>
-            <div><strong>Folio:</strong> ${id}</div>
-            <div><strong>Fecha:</strong> ${fecha} ${hora}</div>
-            <div>--------------------------------</div>
-            <div><strong>Cliente:</strong> ${cliente}</div>
-            <div><strong>Tel:</strong> ${telefono}</div>
-            <div><strong>Dirección:</strong> ${direccion}</div>
-            <div>--------------------------------</div>
-            <div><strong>PRODUCTOS:</strong></div>
-            <div>${pedido}</div>
-            <div>--------------------------------</div>
-            <div><strong>Método Pago:</strong> ${pago}</div>
-            <div style="font-size:13px; font-weight:bold;">TOTAL: ${total}</div>
-            <div>--------------------------------</div>
-            <div style="text-align:center; margin-top:5px;">¡Gracias por su compra!</div>
-        `;
-        document.body.appendChild(ticketDiv);
-        window.print();
-        document.body.removeChild(ticketDiv);
+        if (bluetoothCharacteristic) {
+            let ticket = `TIENDITA / RECAUDERIA\n`;
+            ticket += `Ticket de Pedido por Voz\n`;
+            ticket += `--------------------------------\n`;
+            ticket += `Folio: ${id}\n`;
+            ticket += `Fecha: ${fecha} ${hora}\n`;
+            ticket += `--------------------------------\n`;
+            ticket += `Cliente: ${cliente}\n`;
+            ticket += `Tel: ${telefono}\n`;
+            ticket += `Direccion: ${direccion}\n`;
+            ticket += `--------------------------------\n`;
+            ticket += `PRODUCTOS:\n${pedido}\n`;
+            ticket += `--------------------------------\n`;
+            ticket += `Metodo Pago: ${pago}\n`;
+            ticket += `TOTAL: ${total}\n`;
+            ticket += `--------------------------------\n`;
+            ticket += `!Gracias por su compra!\n\n`;
+            
+            enviarTextoImpresora(ticket);
+        } else {
+            window.print();
+        }
     }
 
     setInterval(cargarPedidos, 15000);
