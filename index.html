@@ -31,7 +31,6 @@
 </div>
 
 <script>
-    // URL de tu Webhook / Apps Script actualizado
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx7cCv-lnT-alk9ykcS7wThzTnOjr-_FxfPbOwJPN_XkSb-ogeKobHmUVPy6V_k3C0t9g/exec";
 
     function cargarPedidos() {
@@ -59,7 +58,7 @@
                             <div style="margin-top: 8px;"><strong>Total:</strong> <span class="total-badge">${p.total}</span></div>
                         </div>
                         <div>
-                            <button class="btn-print" onclick="imprimirTicket('${p.id}', '${p.fecha}', '${p.hora}', '${p.cliente}', '${p.telefono}', '${p.pedido}', '${p.direccion}', '${p.total}', '${p.pago}')">🖨️ Imprimir Ticket</button>
+                            <button class="btn-print" onclick="imprimirTicket('${p.id}', '${p.fecha} ${p.hora}', '${p.cliente}', '${p.telefono}', '${p.pedido}', '${p.direccion}', '${p.total}', '${p.pago}')">🖨️ Imprimir Ticket</button>
                         </div>
                     `;
                     contenedor.appendChild(card);
@@ -71,7 +70,7 @@
             });
     }
 
-    function imprimirTicket(id, fecha, hora, cliente, telefono, pedido, direccion, total, pago) {
+    function imprimirTicket(id, fechaHora, cliente, telefono, pedido, direccion, total, pago) {
         const ticketDiv = document.createElement('div');
         ticketDiv.className = 'ticket-impresion';
         ticketDiv.innerHTML = `
@@ -79,7 +78,7 @@
             <div style="text-align:center;">Ticket de Pedido por Voz</div>
             <div>--------------------------------</div>
             <div><strong>Folio:</strong> ${id}</div>
-            <div><strong>Fecha:</strong> ${fecha} ${hora}</div>
+            <div><strong>Fecha:</strong> ${fechaHora}</div>
             <div>--------------------------------</div>
             <div><strong>Cliente:</strong> ${cliente}</div>
             <div><strong>Tel:</strong> ${telefono}</div>
