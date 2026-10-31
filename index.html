@@ -38,7 +38,7 @@
 </div>
 
 <script>
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyAqwdqfY2q39TVxXBWkyQ_SYLSAS_pnadya1BWoTfCvCxyPVDNEjR-nVNy61IZJym8qg/exec";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwyduTSTITAqN114sBuU6jZ6B-J29_emrOPNyxX4ghABeCkRl90OdSC0GuIVDlPCAP5TA/exec";
     
     let bluetoothDevice = null;
     let bluetoothCharacteristic = null;
@@ -117,7 +117,7 @@
                         <div class="actions">
                             <button class="btn-print" onclick="imprimirTicket('${id}', '${fecha}', '${hora}', '${cliente}', '${telefono}', '${pedido}', '${direccion}', '${total}', '${pago}')">🖨️ Imprimir</button>
                             <button class="btn-done" onclick="marcarEntregado('${cardId}')">✅ Entregado</button>
-                            <button class="btn-delete" onclick="eliminarPedido('${cardId}')">🗑️ Eliminar</button>
+                            <button class="btn-delete" onclick="eliminarPedido('${id}', '${cardId}')">🗑️ Eliminar</button>
                         </div>
                     `;
                     contenedor.appendChild(card);
@@ -141,12 +141,26 @@
         }
     }
 
-    function eliminarPedido(cardId) {
-        if (confirm("¿Estás seguro de quitar este pedido de la pantalla?")) {
-            const card = document.getElementById(cardId);
-            card.style.transform = "scale(0.9)";
-            card.style.opacity = "0";
-            setTimeout(() => card.remove(), 300);
+    function eliminarPedido(idPedido, cardId) {
+        if (confirm("¿Estás seguro de eliminar este pedido del panel y del Excel?")) {
+            const deleteUrl = `${WEB_APP_URL}?action=delete&id=${idPedido}`;
+            
+            fetch(deleteUrl, { redirect: "follow" })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.status === "success") {
+                        const card = document.getElementById(cardId);
+                        card.style.transform = "scale(0.9)";
+                        card.style.opacity = "0";
+                        setTimeout(() => card.remove(), 300);
+                    } else {
+                        alert("No se pudo encontrar el pedido en el Excel.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error al eliminar:", error);
+                    alert("Error de conexión al intentar borrar el pedido.");
+                });
         }
     }
 
