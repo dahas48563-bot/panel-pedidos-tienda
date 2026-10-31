@@ -16,7 +16,6 @@
         .btn-print:hover { background: #1f618d; }
         .loading { text-align: center; font-size: 1.2em; color: #7f8c8d; margin-top: 40px; }
 
-        /* Estilos para la impresión del Ticket Térmico (58mm / 80mm) */
         @media print {
             body * { visibility: hidden; }
             .ticket-impresion, .ticket-impresion * { visibility: visible; }
@@ -32,8 +31,7 @@
 </div>
 
 <script>
-    // URL de tu Webhook / Apps Script de Google Sheets configurada
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzhdXiUCnJfapLDscpsLsIYlx8HBjZ3P8uIyE9JBmv6NJmueCGBHpqBzJIiPVFMO-O1rQ/exec";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz6LqiuTQLzKcQ_nCALn2krYjqm8ELHfzSTJIBNK2kgVta5X6u8LOfseziiIgjLMyAn8g/exec";
 
     function cargarPedidos() {
         const contenedor = document.getElementById('pedidos-list');
@@ -102,7 +100,6 @@
         document.body.removeChild(ticketDiv);
     }
 
-    // Actualizar automáticamente cada 15 segundos
     setInterval(cargarPedidos, 15000);
     window.onload = cargarPedidos;
 </script>
