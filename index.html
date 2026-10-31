@@ -32,28 +32,25 @@
 </div>
 
 <script>
-    // URL de tu Webhook / Apps Script de Google Sheets
+    // URL de tu Webhook / Apps Script de Google Sheets configurada
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz5csQ9duazBLQKGdmo9OvqSIdGPpfFrBC4atNsw5kPEZJWPakxvc4ZpqmV0oEUJW9rLg/exec";
 
     function cargarPedidos() {
         const contenedor = document.getElementById('pedidos-list');
-        
-        // Si aún no pones tu URL, mostramos una alerta visual amigable
-        if (WEB_APP_URL.includes("TU_URL")) {
-            contenedor.innerHTML = `<p style="text-align:center; color:#c0392b;">⚠️ Por favor configura la URL de tu Apps Script en el código de index.html</p>`;
-            return;
-        }
 
-        fetch(WEB_APP_URL)
-            .then(response => response.json())
+        fetch(WEB_APP_URL, { redirect: "follow" })
+            .then(response => {
+                if (!response.ok) throw new Error("Error en la respuesta de red");
+                return response.json();
+            })
             .then(data => {
-                if (data.length === 0) {
+                if (!Array.isArray(data) || data.length === 0) {
                     contenedor.innerHTML = "<p style='text-align:center;'>No hay pedidos registrados todavía.</p>";
                     return;
                 }
 
                 contenedor.innerHTML = "";
-                data.reverse().forEach(p => {
+                data.slice().reverse().forEach(p => {
                     const card = document.createElement('div');
                     card.className = 'card';
                     card.innerHTML = `
@@ -73,6 +70,7 @@
                 });
             })
             .catch(error => {
+                console.error("Error al cargar pedidos:", error);
                 contenedor.innerHTML = "<p style='text-align:center; color:red;'>Error al cargar los pedidos desde Google Sheets.</p>";
             });
     }
