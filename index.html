@@ -19,6 +19,8 @@
         .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
         .btn-print { background: #2980b9; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px; }
         .btn-print:hover { background: #1f618d; }
+        .btn-wa { background: #25D366; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px; }
+        .btn-wa:hover { background: #1EBE5D; }
         .btn-done { background: #27ae60; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px; }
         .btn-done:hover { background: #219653; }
         .btn-delete { background: #c0392b; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px; }
@@ -116,6 +118,7 @@
                         </div>
                         <div class="actions">
                             <button class="btn-print" onclick="imprimirTicket('${id}', '${fecha}', '${hora}', '${cliente}', '${telefono}', '${pedido}', '${direccion}', '${total}', '${pago}')">🖨️ Imprimir</button>
+                            <button class="btn-wa" onclick="enviarWhatsApp('${telefono}', '${id}', '${fecha}', '${cliente}', '${pedido}', '${total}', '${pago}')">💬 WhatsApp</button>
                             <button class="btn-done" onclick="marcarEntregado('${cardId}')">✅ Entregado</button>
                             <button class="btn-delete" onclick="eliminarPedido('${id}', '${cardId}')">🗑️ Eliminar</button>
                         </div>
@@ -126,6 +129,26 @@
             .catch(error => {
                 contenedor.innerHTML = "<p style='text-align:center; color:red;'>Error al cargar pedidos.</p>";
             });
+    }
+
+    function enviarWhatsApp(telefono, id, fecha, cliente, pedido, total, pago) {
+        // Limpiamos el teléfono por si trae símbolos o espacios
+        let telLimpias = telefono.replace(/\D/g, '');
+        if (!telLimpias || telLimpias.length < 8) {
+            alert("El cliente no cuenta con un número válido registrado.");
+            return;
+        }
+        
+        let mensaje = `Hola *${cliente}*, ¡tu pedido en la tiendita ha sido registrado con éxito! 🛒\n\n`;
+        mensaje += `📋 *Folio:* ${id}\n`;
+        mensaje += `📅 *Fecha:* ${fecha}\n`;
+        mensaje += `🛍️ *Productos:* ${pedido}\n`;
+        mensaje += `💳 *Método de Pago:* ${pago}\n`;
+        mensaje += `💰 *TOTAL A PAGAR:* ${total}\n\n`;
+        mensaje += `¡Gracias por tu compra! Te avisaremos cuando esté listo.`;
+
+        let urlWA = `https://api.whatsapp.com/send?phone=${telLimpias}&text=${encodeURIComponent(mensaje)}`;
+        window.open(urlWA, '_blank');
     }
 
     function marcarEntregado(cardId) {
