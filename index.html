@@ -16,7 +16,6 @@
         .btn-print:hover { background: #1f618d; }
         .loading { text-align: center; font-size: 1.2em; color: #7f8c8d; margin-top: 40px; }
 
-        /* Estilos para la impresión del Ticket Térmico (58mm / 80mm) */
         @media print {
             body * { visibility: hidden; }
             .ticket-impresion, .ticket-impresion * { visibility: visible; }
@@ -32,17 +31,14 @@
 </div>
 
 <script>
-    // URL de tu Webhook / Apps Script de Google Sheets configurada
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz6qAsSicTg2if8do-38b9tSZpKgS7Cy5AQjEGt2aCG0n47Jpr8GpEfbEyWiPRtYCnk9A/exec";
+    // URL de tu Webhook / Apps Script actualizado
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx7cCv-lnT-alk9ykcS7wThzTnOjr-_FxfPbOwJPN_XkSb-ogeKobHmUVPy6V_k3C0t9g/exec";
 
     function cargarPedidos() {
         const contenedor = document.getElementById('pedidos-list');
 
         fetch(WEB_APP_URL, { redirect: "follow" })
-            .then(response => {
-                if (!response.ok) throw new Error("Error en la respuesta de red");
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
                 if (!Array.isArray(data) || data.length === 0) {
                     contenedor.innerHTML = "<p style='text-align:center;'>No hay pedidos registrados todavía.</p>";
@@ -70,7 +66,7 @@
                 });
             })
             .catch(error => {
-                console.error("Error al cargar pedidos:", error);
+                console.error("Error:", error);
                 contenedor.innerHTML = "<p style='text-align:center; color:red;'>Error al cargar los pedidos desde Google Sheets.</p>";
             });
     }
@@ -102,7 +98,6 @@
         document.body.removeChild(ticketDiv);
     }
 
-    // Actualizar automáticamente cada 15 segundos
     setInterval(cargarPedidos, 15000);
     window.onload = cargarPedidos;
 </script>
