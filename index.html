@@ -117,6 +117,14 @@
             });
     }
 
+    // Función para limpiar acentos y eñes para la impresora térmica
+    function limpiarTexto(texto) {
+        return texto.normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
+                    .replace(/ñ/g, "n")
+                    .replace(/Ñ/g, "N");
+    }
+
     async function enviarTextoImpresora(texto) {
         if (!bluetoothCharacteristic) {
             alert("Primero presiona el botón 'Conectar Impresora Bluetooth' arriba.");
@@ -146,7 +154,9 @@
             ticket += `--------------------------------\n`;
             ticket += `!Gracias por su compra!\n\n`;
             
-            enviarTextoImpresora(ticket);
+            // Enviamos el ticket limpio sin acentos ni caracteres extraños
+            let ticketLimpio = limpiarTexto(ticket);
+            enviarTextoImpresora(ticketLimpio);
         } else {
             window.print();
         }
