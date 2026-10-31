@@ -49,19 +49,30 @@
 
                 contenedor.innerHTML = "";
                 data.slice().reverse().forEach(p => {
+                    // Respaldo inteligente para evitar undefined si cambia alguna clave
+                    const id = p.id || p.ID || "Sin ID";
+                    const fecha = p.fecha || p.FECHA || "";
+                    const hora = p.hora || p.HORA || "";
+                    const cliente = p.cliente || p.CLIENTE || "Cliente sin nombre";
+                    const telefono = p.telefono || p.TELEFONO || "Sin número";
+                    const pedido = p.pedido || p.PEDIDO || "Sin detalles";
+                    const direccion = p.direccion || p.DIRECCION || "No especificada";
+                    const pago = p.pago || p.PAGO || "Efectivo";
+                    const total = p.total || p.TOTAL || "$0.00";
+
                     const card = document.createElement('div');
                     card.className = 'card';
                     card.innerHTML = `
                         <div class="info">
-                            <div><strong>ID:</strong> ${p.id} | 🕒 ${p.fecha} ${p.hora}</div>
-                            <div><strong>Cliente:</strong> ${p.cliente} (${p.telefono})</div>
-                            <div><strong>Pedido:</strong> ${p.pedido}</div>
-                            <div><strong>Dirección:</strong> ${p.direccion}</div>
-                            <div><strong>Pago:</strong> ${p.pago}</div>
-                            <div style="margin-top: 8px;"><strong>Total:</strong> <span class="total-badge">${p.total}</span></div>
+                            <div><strong>ID:</strong> ${id} | 🕒 ${fecha} ${hora}</div>
+                            <div><strong>Cliente:</strong> ${cliente} (${telefono})</div>
+                            <div><strong>Pedido:</strong> ${pedido}</div>
+                            <div><strong>Dirección:</strong> ${direccion}</div>
+                            <div><strong>Pago:</strong> ${pago}</div>
+                            <div style="margin-top: 8px;"><strong>Total:</strong> <span class="total-badge">${total}</span></div>
                         </div>
                         <div>
-                            <button class="btn-print" onclick="imprimirTicket('${p.id}', '${p.fecha}', '${p.hora}', '${p.cliente}', '${p.telefono}', '${p.pedido}', '${p.direccion}', '${p.total}', '${p.pago}')">🖨️ Imprimir Ticket</button>
+                            <button class="btn-print" onclick="imprimirTicket('${id}', '${fecha}', '${hora}', '${cliente}', '${telefono}', '${pedido}', '${direccion}', '${total}', '${pago}')">🖨️ Imprimir Ticket</button>
                         </div>
                     `;
                     contenedor.appendChild(card);
