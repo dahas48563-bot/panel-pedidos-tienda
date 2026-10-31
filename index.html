@@ -11,12 +11,18 @@
         .bt-status-bar { text-align: center; margin-bottom: 20px; }
         .btn-bt { background: #8e44ad; color: white; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; }
         .btn-bt:hover { background: #732d91; }
-        .card { background: white; padding: 20px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; border-left: 5px solid #27ae60; }
+        .card { background: white; padding: 20px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; border-left: 5px solid #27ae60; transition: all 0.3s ease; }
+        .card.entregado { border-left-color: #95a5a6; background: #f9f9f9; opacity: 0.7; }
         .info div { margin-bottom: 6px; }
         .info strong { color: #555; }
         .total-badge { background: #e67e22; color: white; padding: 4px 10px; border-radius: 4px; font-weight: bold; }
-        .btn-print { background: #2980b9; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+        .btn-print { background: #2980b9; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px; }
         .btn-print:hover { background: #1f618d; }
+        .btn-done { background: #27ae60; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px; }
+        .btn-done:hover { background: #219653; }
+        .btn-delete { background: #c0392b; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px; }
+        .btn-delete:hover { background: #962d22; }
         .loading { text-align: center; font-size: 1.2em; color: #7f8c8d; margin-top: 40px; }
     </style>
 </head>
@@ -83,7 +89,7 @@
                 }
 
                 contenedor.innerHTML = "";
-                data.slice().reverse().forEach(p => {
+                data.slice().reverse().forEach((p, index) => {
                     const id = p.id || p.ID || "Sin ID";
                     const fecha = p.fecha || p.FECHA || "";
                     const hora = p.hora || p.HORA || "";
@@ -94,8 +100,11 @@
                     const pago = p.pago || p.PAGO || "Efectivo";
                     const total = p.total || p.TOTAL || "$0.00";
 
+                    const cardId = `card-${index}`;
                     const card = document.createElement('div');
                     card.className = 'card';
+                    card.id = cardId;
+                    
                     card.innerHTML = `
                         <div class="info">
                             <div><strong>ID:</strong> ${id} | 🕒 ${fecha} ${hora}</div>
@@ -105,8 +114,10 @@
                             <div><strong>Pago:</strong> ${pago}</div>
                             <div style="margin-top: 8px;"><strong>Total:</strong> <span class="total-badge">${total}</span></div>
                         </div>
-                        <div>
-                            <button class="btn-print" onclick="imprimirTicket('${id}', '${fecha}', '${hora}', '${cliente}', '${telefono}', '${pedido}', '${direccion}', '${total}', '${pago}')">🖨️ Imprimir Ticket</button>
+                        <div class="actions">
+                            <button class="btn-print" onclick="imprimirTicket('${id}', '${fecha}', '${hora}', '${cliente}', '${telefono}', '${pedido}', '${direccion}', '${total}', '${pago}')">🖨️ Imprimir</button>
+                            <button class="btn-done" onclick="marcarEntregado('${cardId}')">✅ Entregado</button>
+                            <button class="btn-delete" onclick="eliminarPedido('${cardId}')">🗑️ Eliminar</button>
                         </div>
                     `;
                     contenedor.appendChild(card);
@@ -117,7 +128,28 @@
             });
     }
 
-    // Función para limpiar acentos y eñes para la impresora térmica
+    function marcarEntregado(cardId) {
+        const card = document.getElementById(cardId);
+        card.classList.toggle('entregado');
+        const btn = card.querySelector('.btn-done');
+        if (card.classList.contains('entregado')) {
+            btn.innerText = "🔄 Pendiente";
+            btn.style.background = "#e67e22";
+        } else {
+            btn.innerText = "✅ Entregado";
+            btn.style.background = "#27ae60";
+        }
+    }
+
+    function eliminarPedido(cardId) {
+        if (confirm("¿Estás seguro de quitar este pedido de la pantalla?")) {
+            const card = document.getElementById(cardId);
+            card.style.transform = "scale(0.9)";
+            card.style.opacity = "0";
+            setTimeout(() => card.remove(), 300);
+        }
+    }
+
     function limpiarTexto(texto) {
         return texto.normalize("NFD")
                     .replace(/[\u0300-\u036f]/g, "")
@@ -154,7 +186,6 @@
             ticket += `--------------------------------\n`;
             ticket += `!Gracias por su compra!\n\n`;
             
-            // Enviamos el ticket limpio sin acentos ni caracteres extraños
             let ticketLimpio = limpiarTexto(ticket);
             enviarTextoImpresora(ticketLimpio);
         } else {
